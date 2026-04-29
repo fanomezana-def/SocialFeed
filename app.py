@@ -7,6 +7,8 @@ from werkzeug.utils import secure_filename
 from itsdangerous import URLSafeTimedSerializer
 from datetime import datetime
 import os, uuid, json
+import random
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecretkey-change-in-production-2025'
@@ -34,6 +36,7 @@ login_manager.login_view = 'login'
 login_manager.login_message = 'Veuillez vous connecter.'
 login_manager.login_message_category = 'warning'
 s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
 
 # ── MODELS ──────────────────────────────────────────────────────────────────
 
@@ -297,17 +300,33 @@ def edit_profile():
     return render_template('edit_profile.html')
 
 # ── FEED ──────────────────────────────────────────────────────────────────────
+import random  # en haut du fichier (si pas déjà)
 
-@app.route('/')
+@app.route('/', endpoint='feed')
 @login_required
-def feed():
+def feed_index():
     page = request.args.get('page',1,type=int)
     posts = Post.query.order_by(Post.created_at.desc()).paginate(page=page, per_page=6)
+
+    # 🔥 RANDOM PRODUCTS
     products = Product.query.all()
-    suggested_users = User.query.filter(User.id != current_user.id).limit(5).all()
+    random.shuffle(products)
+
+    # 🔥 RANDOM USERS
+    suggested_users = User.query.filter(User.id != current_user.id).all()
+    random.shuffle(suggested_users)
+    suggested_users = suggested_users[:5]
+
     bookmarked_ids = {b.post_id for b in current_user.bookmarks}
-    return render_template('feed.html', posts=posts, products=products,
-                           suggested_users=suggested_users, bookmarked_ids=bookmarked_ids)
+
+    return render_template(
+        'feed.html',
+        posts=posts,
+        products=products,
+        suggested_users=suggested_users,
+        bookmarked_ids=bookmarked_ids
+    )
+
 
 @app.route('/post/new', methods=['POST'])
 @login_required
@@ -764,6 +783,7 @@ with app.app_context():
         db.create_all()
         seed()
         print("✅ Base de données recréée avec succès !\n")
+
 
 if __name__ == '__main__':
     app.run(debug=True)

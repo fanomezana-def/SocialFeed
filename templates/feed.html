@@ -71,51 +71,54 @@
     <!-- POSTS -->
     {% for post in posts.items %}
 
-    <!-- Product suggestion every 3 posts -->
-    {% if loop.index == 2 and products %}
-    {% set prod = products[0] %}
-    <div class="card suggestion-banner" data-product-id="{{ prod.id }}">
-      <div class="suggestion-label"> Suggestion pour vous</div>
-      <div class="suggestion-content">
-        <img src="{{ prod.image_url }}" class="suggestion-img" alt="{{ prod.name }}" onerror="this.src='https://via.placeholder.com/100x100'">
-        <div class="suggestion-info">
-          {% if prod.badge %}<span class="badge-pill">{{ prod.badge }}</span>{% endif %}
-          <h4>{{ prod.name }}</h4>
-          <p>{{ prod.description[:80] }}{% if prod.description|length > 80 %}…{% endif %}</p>
-          <div class="suggestion-footer">
-            <span class="price-tag">{{ prod.price | ariary }}</span>
-            <form method="POST" action="{{ url_for('cart_add', product_id=prod.id) }}" class="ajax-cart-form">
-              <input type="hidden" name="source" value="banner">
-              <button type="submit" class="btn btn-primary btn-xs">🛒 Ajouter</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-    {% endif %}
+    <!-- SUGGESTION 1 (2e post) -->
+    {% if loop.index == 2 and products|length >= 5 %}
+<div class="card suggestion-banner">
+  <div class="suggestion-label">✨ Suggestions pour vous</div>
 
-    {% if loop.index == 4 and products|length > 1 %}
-    {% set prod = products[1] %}
-    <div class="card suggestion-banner" data-product-id="{{ prod.id }}">
-      <div class="suggestion-label"> Tendance du moment</div>
-      <div class="suggestion-content">
-        <img src="{{ prod.image_url }}" class="suggestion-img" alt="{{ prod.name }}" onerror="this.src='https://via.placeholder.com/100x100'">
-        <div class="suggestion-info">
-          {% if prod.badge %}<span class="badge-pill">{{ prod.badge }}</span>{% endif %}
-          <h4>{{ prod.name }}</h4>
-          <p>{{ prod.description[:80] }}{% if prod.description|length > 80 %}…{% endif %}</p>
-          <div class="suggestion-footer">
-            <span class="price-tag">{{ prod.price | ariary }}</span>
-            <form method="POST" action="{{ url_for('cart_add', product_id=prod.id) }}" class="ajax-cart-form">
-              <input type="hidden" name="source" value="feed">
-              <button type="submit" class="btn btn-primary btn-xs">🛒 Ajouter</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-    {% endif %}
+  <div class="suggestion-grid">
+    {% for prod in products[:5] %}
+    <div class="suggestion-item" data-product-id="{{ prod.id }}">
+      <img src="{{ prod.image_url }}" alt="{{ prod.name }}"
+           onerror="this.src='https://via.placeholder.com/80'">
 
+      <div class="suggestion-name">{{ prod.name }}</div>
+      <div class="suggestion-price">{{ prod.price | ariary }}</div>
+
+      <form method="POST" action="{{ url_for('cart_add', product_id=prod.id) }}" class="ajax-cart-form">
+        <input type="hidden" name="source" value="banner1">
+        <button type="submit" class="btn btn-primary btn-xs">Ajouter</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+
+<!-- SUGGESTION 2 (4e post) -->
+{% if loop.index == 4 and products|length > 5 %}
+<div class="card suggestion-banner">
+  <div class="suggestion-label">🔥 Tendance du moment</div>
+
+  <div class="suggestion-grid">
+    {% for prod in products[5:10] %}
+    <div class="suggestion-item" data-product-id="{{ prod.id }}">
+      <img src="{{ prod.image_url }}" alt="{{ prod.name }}"
+           onerror="this.src='https://via.placeholder.com/80'">
+
+      <div class="suggestion-name">{{ prod.name }}</div>
+      <div class="suggestion-price">{{ prod.price | ariary }}</div>
+
+      <form method="POST" action="{{ url_for('cart_add', product_id=prod.id) }}" class="ajax-cart-form">
+        <input type="hidden" name="source" value="banner2">
+        <button type="submit" class="btn btn-primary btn-xs">Ajouter</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
     <div class="card post-card" id="post-{{ post.id }}">
       <div class="post-header">
         <a href="{{ url_for('profile', user_id=post.author.id) }}">

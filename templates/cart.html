@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Panier — SocialFeed{% endblock %}
+{% block content %}
+<div class="cart-page">
+  <div class="page-header">
+    <h2>🛒 Mon Panier</h2>
+    <a href="{{ url_for('products') }}" class="btn btn-ghost">← Continuer les achats</a>
+  </div>
+
+  {% if items %}
+  <div class="cart-layout">
+    <div class="cart-items">
+      {% for item in items %}
+      <div class="card cart-item" id="cart-item-{{ item.id }}">
+        <img src="{{ item.product.image_url }}" class="cart-item-img" alt="{{ item.product.name }}" onerror="this.src='https://via.placeholder.com/80'">
+        <div class="cart-item-info">
+          <h4>{{ item.product.name }}</h4>
+          <p>{{ item.product.description[:60] }}…</p>
+          <div class="cart-item-price" id="price-{{ item.id }}">{{ (item.product.price * item.quantity) | ariary }}</div>
+        </div>
+        <div class="cart-item-controls">
+          <div class="qty-control">
+            <button class="qty-btn" onclick="updateCart({{ item.id }}, 'dec')">−</button>
+            <span class="qty-val" id="qty-{{ item.id }}">{{ item.quantity }}</span>
+            <button class="qty-btn" onclick="updateCart({{ item.id }}, 'inc')">+</button>
+          </div>
+          <form method="POST" action="{{ url_for('cart_remove', item_id=item.id) }}" onsubmit="return confirm('Retirer ?')">
+            <button class="icon-btn danger" title="Retirer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="cart-summary card">
+      <h3>Récapitulatif</h3>
+      <div class="summary-row"><span>{{ items|length }} article{% if items|length > 1 %}s{% endif %}</span><span id="cartTotal">{{ total | ariary }}</span></div>
+      <div class="summary-row"><span>Livraison</span><span>Gratuite</span></div>
+      <hr class="summary-sep">
+      <div class="summary-total"><span>Total</span><span id="cartTotalFinal">{{ total | ariary }}</span></div>
+      <form method="POST" action="{{ url_for('checkout') }}" onsubmit="return confirm('Confirmer la commande ?')">
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:16px">✅ Commander maintenant</button>
+      </form>
+      <p style="font-size:.78rem;color:var(--text3);text-align:center;margin-top:10px">Paiement sécurisé — Livraison à Madagascar</p>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="card empty-card" style="max-width:480px;margin:60px auto;text-align:center">
+    <div class="empty-icon">🛒</div>
+    <h3>Votre panier est vide</h3>
+    <p>Découvrez notre boutique et ajoutez des produits !</p>
+    <a href="{{ url_for('products') }}" class="btn btn-primary" style="margin-top:16px">Voir la boutique</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+{% block title %}Accueil  SocialFeed{% endblock %}
+{% block content %}
+<div class="feed-layout">
+
+  <!-- CENTER FEED -->
+  <div class="feed-center">
+
+    <!-- COMPOSER -->
+    <div class="card composer-card">
+      <div class="composer-header">
+        <img src="{{ current_user.avatar or 'https://i.pravatar.cc/48?u='~current_user.id }}" class="composer-avatar">
+        <span class="composer-placeholder" id="composerToggle">Quoi de neuf, {{ current_user.username }} ?</span>
+      </div>
+      <div class="composer-form" id="composerForm" style="display:none">
+        <form method="POST" action="{{ url_for('new_post') }}" enctype="multipart/form-data" id="postForm">
+          <textarea name="content" id="postContent" placeholder="Partagez quelque chose..." rows="3" autofocus></textarea>
+
+          <!-- Media preview -->
+          <div id="mediaPreview" class="media-preview" style="display:none"></div>
+
+          <!-- Single hidden file input -->
+          <input type="file" name="media" id="mainFileInput" style="display:none" onchange="previewMedia(this)">
+          <!-- URL input (shown when URL mode) -->
+          <div id="urlInputRow" style="display:none;margin-top:8px">
+            <input type="text" name="media_url" id="mediaUrlInput" placeholder="Collez une URL d'image..." class="form-input" style="width:100%">
+          </div>
+
+          <div class="composer-toolbar">
+            <div class="composer-media-btns">
+              <button type="button" class="media-btn" onclick="openFileInput('image/*')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+                Photo
+              </button>
+              <button type="button" class="media-btn" onclick="openFileInput('video/*')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18"><polygon points="23,7 16,12 23,17"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                Vidéo
+              </button>
+              <button type="button" class="media-btn" onclick="openFileInput('audio/*')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                Audio
+              </button>
+              <button type="button" class="media-btn" onclick="toggleUrlInput()">
+                🔗 URL
+              </button>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button type="button" class="btn btn-ghost btn-sm" onclick="closeComposer()">Annuler</button>
+              <button type="submit" class="btn btn-primary btn-sm">Publier</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="composer-quick-btns" id="composerQuickBtns">
+        <button type="button" class="quick-btn" onclick="openComposer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+          Photo/Vidéo
+        </button>
+        <button type="button" class="quick-btn" onclick="openComposer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          Audio
+        </button>
+        <button type="button" class="quick-btn" onclick="openComposer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          Lien
+        </button>
+      </div>
+    </div>
+
+    <!-- POSTS -->
+    {% for post in posts.items %}
+
+    <!-- Product suggestion every 3 posts -->
+    {% if loop.index == 2 and products %}
+    {% set prod = products[0] %}
+    <div class="card suggestion-banner" data-product-id="{{ prod.id }}">
+      <div class="suggestion-label"> Suggestion pour vous</div>
+      <div class="suggestion-content">
+        <img src="{{ prod.image_url }}" class="suggestion-img" alt="{{ prod.name }}" onerror="this.src='https://via.placeholder.com/100x100'">
+        <div class="suggestion-info">
+          {% if prod.badge %}<span class="badge-pill">{{ prod.badge }}</span>{% endif %}
+          <h4>{{ prod.name }}</h4>
+          <p>{{ prod.description[:80] }}{% if prod.description|length > 80 %}…{% endif %}</p>
+          <div class="suggestion-footer">
+            <span class="price-tag">{{ prod.price | ariary }}</span>
+            <form method="POST" action="{{ url_for('cart_add', product_id=prod.id) }}" class="ajax-cart-form">
+              <input type="hidden" name="source" value="banner">
+              <button type="submit" class="btn btn-primary btn-xs">🛒 Ajouter</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if loop.index == 4 and products|length > 1 %}
+    {% set prod = products[1] %}
+    <div class="card suggestion-banner" data-product-id="{{ prod.id }}">
+      <div class="suggestion-label"> Tendance du moment</div>
+      <div class="suggestion-content">
+        <img src="{{ prod.image_url }}" class="suggestion-img" alt="{{ prod.name }}" onerror="this.src='https://via.placeholder.com/100x100'">
+        <div class="suggestion-info">
+          {% if prod.badge %}<span class="badge-pill">{{ prod.badge }}</span>{% endif %}
+          <h4>{{ prod.name }}</h4>
+          <p>{{ prod.description[:80] }}{% if prod.description|length > 80 %}…{% endif %}</p>
+          <div class="suggestion-footer">
+            <span class="price-tag">{{ prod.price | ariary }}</span>
+            <form method="POST" action="{{ url_for('cart_add', product_id=prod.id) }}" class="ajax-cart-form">
+              <input type="hidden" name="source" value="feed">
+              <button type="submit" class="btn btn-primary btn-xs">🛒 Ajouter</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card post-card" id="post-{{ post.id }}">
+      <div class="post-header">
+        <a href="{{ url_for('profile', user_id=post.author.id) }}">
+          <img src="{{ post.author.avatar or 'https://i.pravatar.cc/40?u='~post.author.id }}" class="post-avatar" alt="">
+        </a>
+        <div class="post-meta">
+          <a href="{{ url_for('profile', user_id=post.author.id) }}" class="post-username">{{ post.author.username }}</a>
+          {% if post.author.location %}<span class="post-location">📍 {{ post.author.location }}</span>{% endif %}
+          <span class="post-date">{{ post.created_at.strftime('%d %b %Y · %H:%M') }}</span>
+        </div>
+        <div class="post-actions-top">
+          {% if post.user_id == current_user.id or current_user.is_admin %}
+          <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" onsubmit="return confirm('Supprimer ?')">
+            <button class="icon-btn danger" title="Supprimer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="post-body">
+        <p class="post-text">{{ post.content }}</p>
+
+        {% if post.media_type == 'image' or post.media_type == 'url' %}
+          <img src="{{ post.media_url }}" class="post-media-img" alt="media" onerror="this.style.display='none'" loading="lazy">
+        {% elif post.media_type == 'video' %}
+          <video class="post-media-video" controls preload="metadata">
+            <source src="{{ post.media_url }}">
+            Votre navigateur ne supporte pas la vidéo.
+          </video>
+        {% elif post.media_type == 'audio' %}
+          <div class="post-audio-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            <audio class="post-media-audio" controls>
+              <source src="{{ post.media_url }}">
+            </audio>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="post-stats">
+        <span>{{ post.likes|length }} j'aime</span>
+        <span>{{ post.comments|length }} commentaire{% if post.comments|length != 1 %}s{% endif %}</span>
+      </div>
+
+      <div class="post-actions-bar">
+        <button class="action-btn like-btn {% if post.likes|selectattr('user_id','equalto',current_user.id)|list %}liked{% endif %}"
+                data-post-id="{{ post.id }}" onclick="likePost({{ post.id }}, this)">
+          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="17" fill="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          J'aime
+        </button>
+        <button class="action-btn" onclick="toggleComments({{ post.id }})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Commenter
+        </button>
+        <form method="POST" action="{{ url_for('bookmark_post', post_id=post.id) }}" style="display:inline">
+          <button type="submit" class="action-btn {% if post.id in bookmarked_ids %}bookmarked{% endif %}">
+            <svg viewBox="0 0 24 24" fill="{% if post.id in bookmarked_ids %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2" width="17"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            Enregistrer
+          </button>
+        </form>
+      </div>
+
+      <!-- Comments -->
+      <div class="comments-section" id="comments-{{ post.id }}" style="display:none">
+        <div class="comments-list">
+          {% for c in post.comments %}
+          <div class="comment-item">
+            <img src="{{ c.author.avatar or 'https://i.pravatar.cc/28?u='~c.author.id }}" class="comment-avatar" alt="">
+            <div class="comment-bubble">
+              <span class="comment-author">{{ c.author.username }}</span>
+              <span class="comment-text">{{ c.content }}</span>
+              <span class="comment-date">{{ c.created_at.strftime('%d/%m %H:%M') }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        <form method="POST" action="{{ url_for('comment_post', post_id=post.id) }}" class="comment-form">
+          <img src="{{ current_user.avatar or 'https://i.pravatar.cc/28?u='~current_user.id }}" class="comment-avatar" alt="">
+          <input type="text" name="content" placeholder="Écrire un commentaire..." class="comment-input">
+          <button type="submit" class="btn btn-primary btn-xs">→</button>
+        </form>
+      </div>
+    </div>
+
+    {% else %}
+    <div class="card empty-card">
+      <div class="empty-icon">📭</div>
+      <p>Aucune publication. Soyez le premier !</p>
+    </div>
+    {% endfor %}
+
+    <!-- Pagination -->
+    {% if posts.pages > 1 %}
+    <div class="pagination">
+      {% if posts.has_prev %}<a href="{{ url_for('feed', page=posts.prev_num) }}" class="btn btn-ghost">← Précédent</a>{% endif %}
+      <span class="page-info">{{ posts.page }} / {{ posts.pages }}</span>
+      {% if posts.has_next %}<a href="{{ url_for('feed', page=posts.next_num) }}" class="btn btn-ghost">Suivant →</a>{% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- RIGHT SIDEBAR -->
+  <aside class="feed-right">
+
+    <!-- Search shortcut -->
+    <div class="card right-search">
+      <a href="{{ url_for('search') }}" class="search-shortcut">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Rechercher...
+      </a>
+    </div>
+
+    <!-- Suggested Users -->
+    <div class="card right-card">
+      <div class="right-title">👥 À découvrir</div>
+      {% for u in suggested_users %}
+      <div class="suggested-user">
+        <a href="{{ url_for('profile', user_id=u.id) }}">
+          <img src="{{ u.avatar or 'https://i.pravatar.cc/36?u='~u.id }}" class="sug-avatar" alt="">
+        </a>
+        <div class="sug-info">
+          <a href="{{ url_for('profile', user_id=u.id) }}" class="sug-name">{{ u.username }}</a>
+          {% if u.location %}<span class="sug-loc">📍 {{ u.location }}</span>{% endif %}
+          <span class="sug-bio">{{ u.bio[:35] if u.bio else 'Utilisateur SocialFeed' }}{% if u.bio|length > 35 %}…{% endif %}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Trending Products -->
+    <div class="card right-card">
+      <div class="right-title">🔥 Produits tendance</div>
+      {% for prod in products[:5] %}
+      <div class="side-product" data-product-id="{{ prod.id }}">
+        <img src="{{ prod.image_url }}" class="side-prod-img" alt="{{ prod.name }}" onerror="this.src='https://via.placeholder.com/50'">
+        <div class="side-prod-info">
+          {% if prod.badge %}<span class="badge-xs">{{ prod.badge }}</span>{% endif %}
+          <div class="side-prod-name">{{ prod.name }}</div>
+          <div class="side-prod-price">{{ prod.price | ariary }}</div>
+        </div>
+        <form method="POST" action="{{ url_for('cart_add', product_id=prod.id) }}" class="ajax-cart-form">
+          <input type="hidden" name="source" value="sidebar">
+          <button type="submit" class="btn btn-primary btn-xs">+</button>
+        </form>
+      </div>
+      {% endfor %}
+      <a href="{{ url_for('products') }}" class="btn btn-ghost" style="width:100%;margin-top:10px;text-align:center">Voir tout →</a>
+    </div>
+
+  </aside>
+</div>
+
+<!-- Cart toast -->
+<div id="cartToast" class="cart-toast" style="display:none"></div>
+{% endblock %}

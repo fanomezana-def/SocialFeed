@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Connexion — SocialFeed{% endblock %}
+{% block auth_content %}
+<div class="auth-card">
+  <h2 class="auth-title">Connexion</h2>
+  <form method="POST" class="auth-form">
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" name="email" required placeholder="votre@email.mg" class="form-input">
+    </div>
+    <div class="form-group">
+      <label>Mot de passe</label>
+      <div class="input-pass-wrap">
+        <input type="password" name="password" id="loginPass" required placeholder="••••••••" class="form-input">
+        <button type="button" class="pass-eye" onclick="togglePass('loginPass',this)">👁</button>
+      </div>
+    </div>
+    <div class="form-check">
+      <label><input type="checkbox" name="remember"> Se souvenir de moi</label>
+    </div>
+    <button type="submit" class="btn btn-primary btn-full">Se connecter</button>
+  </form>
+  <div class="auth-links">
+    <a href="{{ url_for('forgot_password') }}">Mot de passe oublié ?</a>
+    <span>·</span>
+    <a href="{{ url_for('register') }}">Créer un compte</a>
+  </div>
+</div>
+{% endblock %}

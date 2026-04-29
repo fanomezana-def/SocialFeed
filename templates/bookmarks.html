@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Enregistrés — SocialFeed{% endblock %}
+{% block content %}
+<div class="bookmarks-page">
+  <div class="page-header"><h2>🔖 Publications enregistrées</h2></div>
+  {% for post in posts %}
+  <div class="card post-card" id="post-{{ post.id }}">
+    <div class="post-header">
+      <a href="{{ url_for('profile', user_id=post.author.id) }}">
+        <img src="{{ post.author.avatar or 'https://i.pravatar.cc/40?u='~post.author.id }}" class="post-avatar" alt="">
+      </a>
+      <div class="post-meta">
+        <a href="{{ url_for('profile', user_id=post.author.id) }}" class="post-username">{{ post.author.username }}</a>
+        <span class="post-date">{{ post.created_at.strftime('%d %b %Y') }}</span>
+      </div>
+    </div>
+    <div class="post-body">
+      <p class="post-text">{{ post.content }}</p>
+      {% if post.media_type in ['image','url'] %}<img src="{{ post.media_url }}" class="post-media-img" onerror="this.style.display='none'">{% endif %}
+      {% if post.media_type == 'video' %}<video class="post-media-video" controls preload="metadata"><source src="{{ post.media_url }}"></video>{% endif %}
+      {% if post.media_type == 'audio' %}<div class="post-audio-wrap"><audio controls class="post-media-audio"><source src="{{ post.media_url }}"></audio></div>{% endif %}
+    </div>
+    <div class="post-actions-bar">
+      <form method="POST" action="{{ url_for('bookmark_post', post_id=post.id) }}">
+        <button type="submit" class="action-btn bookmarked">🔖 Retirer</button>
+      </form>
+    </div>
+  </div>
+  {% else %}
+  <div class="card empty-card"><div class="empty-icon">🔖</div><p>Aucune publication enregistrée.</p></div>
+  {% endfor %}
+</div>
+{% endblock %}

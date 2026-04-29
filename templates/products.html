@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Boutique — SocialFeed{% endblock %}
+{% block content %}
+<div class="products-page">
+  <div class="page-header">
+    <h2>🛍️ Boutique</h2>
+    <div class="category-filters">
+      <a href="{{ url_for('products') }}" class="filter-chip {% if not selected_category %}active{% endif %}">Tous</a>
+      {% for cat in categories %}
+      <a href="{{ url_for('products', category=cat) }}" class="filter-chip {% if selected_category == cat %}active{% endif %}">{{ cat }}</a>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="products-grid">
+    {% for prod in products %}
+    <div class="card product-card">
+      <div class="product-img-wrap">
+        <img src="{{ prod.image_url }}" class="product-img" alt="{{ prod.name }}" onerror="this.src='https://via.placeholder.com/300x200'" loading="lazy">
+        {% if prod.badge %}<span class="badge-overlay">{{ prod.badge }}</span>{% endif %}
+        <div class="product-stock">Stock: {{ prod.stock }}</div>
+      </div>
+      <div class="product-body">
+        <div class="product-cat">{{ prod.category }}</div>
+        <h3 class="product-name">{{ prod.name }}</h3>
+        <p class="product-desc">{{ prod.description }}</p>
+        <div class="product-footer">
+          <span class="price-lg">{{ prod.price | ariary }}</span>
+          <form method="POST" action="{{ url_for('cart_add', product_id=prod.id) }}" class="ajax-cart-form">
+            <input type="hidden" name="source" value="boutique">
+            <button type="submit" class="btn btn-primary btn-sm">🛒 Ajouter</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="card empty-card"><div class="empty-icon">📭</div><p>Aucun produit.</p></div>
+    {% endfor %}
+  </div>
+</div>
+<div id="cartToast" class="cart-toast" style="display:none"></div>
+{% endblock %}

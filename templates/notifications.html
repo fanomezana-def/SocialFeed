@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Notifications — SocialFeed{% endblock %}
+{% block content %}
+<div class="notif-page">
+  <div class="page-header"><h2>🔔 Notifications</h2></div>
+  <div class="notif-list">
+    {% for n in notifications %}
+    <div class="card notif-item {% if not n.is_read %}notif-unread{% endif %}">
+      <div class="notif-dot"></div>
+      <div class="notif-content">
+        <p>{{ n.content }}</p>
+        <span class="notif-date">{{ n.created_at.strftime('%d/%m/%Y à %H:%M') }}</span>
+      </div>
+    </div>
+    {% else %}
+    <div class="card empty-card"><div class="empty-icon">🔔</div><p>Aucune notification.</p></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

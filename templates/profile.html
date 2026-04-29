@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}{{ user.username }} — SocialFeed{% endblock %}
+{% block content %}
+<div class="profile-page">
+
+  <!-- Cover -->
+  <div class="profile-cover" style="{% if user.cover %}background-image:url('{{ user.cover }}'){% endif %}">
+    {% if user.id == current_user.id %}
+    <a href="{{ url_for('edit_profile') }}" class="btn-edit-profile">✏️ Modifier le profil</a>
+    {% endif %}
+  </div>
+
+  <!-- Header -->
+  <div class="card profile-header">
+    <div class="profile-avatar-wrap">
+      <img src="{{ user.avatar or 'https://i.pravatar.cc/100?u='~user.id }}" class="profile-big-avatar" alt="">
+      {% if user.is_admin %}<span class="admin-badge">Admin</span>{% endif %}
+    </div>
+    <div class="profile-info">
+      <h2 class="profile-name">{{ user.username }}</h2>
+      {% if user.bio %}<p class="profile-bio">{{ user.bio }}</p>{% endif %}
+      <div class="profile-details">
+        {% if user.location %}<span>📍 {{ user.location }}</span>{% endif %}
+        {% if user.website %}<a href="{{ user.website }}" target="_blank" class="profile-website">🔗 {{ user.website }}</a>{% endif %}
+        <span>📅 Membre depuis {{ user.created_at.strftime('%B %Y') }}</span>
+      </div>
+      <div class="profile-stats-bar">
+        <div class="pstat"><span class="pstat-num">{{ posts|length }}</span><span class="pstat-label">Publications</span></div>
+        <div class="pstat"><span class="pstat-num">{{ total_likes }}</span><span class="pstat-label">J'aime reçus</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Posts -->
+  <div class="profile-posts-grid">
+    {% for post in posts %}
+    <div class="card post-card" id="post-{{ post.id }}">
+      <div class="post-header">
+        <img src="{{ user.avatar or 'https://i.pravatar.cc/40?u='~user.id }}" class="post-avatar" alt="">
+        <div class="post-meta">
+          <span class="post-username">{{ user.username }}</span>
+          <span class="post-date">{{ post.created_at.strftime('%d %b %Y · %H:%M') }}</span>
+        </div>
+        {% if post.user_id == current_user.id or current_user.is_admin %}
+        <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" onsubmit="return confirm('Supprimer ?')" style="margin-left:auto">
+          <button class="icon-btn danger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </form>
+        {% endif %}
+      </div>
+      <div class="post-body">
+        <p class="post-text">{{ post.content }}</p>
+        {% if post.media_type in ['image','url'] %}
+          <img src="{{ post.media_url }}" class="post-media-img" alt="" onerror="this.style.display='none'" loading="lazy">
+        {% elif post.media_type == 'video' %}
+          <video class="post-media-video" controls preload="metadata"><source src="{{ post.media_url }}"></video>
+        {% elif post.media_type == 'audio' %}
+          <div class="post-audio-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            <audio controls class="post-media-audio"><source src="{{ post.media_url }}"></audio>
+          </div>
+        {% endif %}
+      </div>
+      <div class="post-stats"><span>❤️ {{ post.likes|length }}</span><span>💬 {{ post.comments|length }}</span></div>
+    </div>
+    {% else %}
+    <div class="card empty-card"><div class="empty-icon">📭</div><p>Aucune publication.</p></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

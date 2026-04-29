@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Modifier le profil — SocialFeed{% endblock %}
+{% block content %}
+<div class="edit-profile-page">
+  <div class="page-header">
+    <a href="{{ url_for('profile', user_id=current_user.id) }}" class="btn btn-ghost">← Retour</a>
+    <h2>Modifier mon profil</h2>
+  </div>
+
+  <form method="POST" enctype="multipart/form-data" class="edit-profile-form">
+
+    <!-- Avatar & Cover -->
+    <div class="card edit-section">
+      <h3>📸 Photos</h3>
+      <div class="photo-edit-row">
+        <div class="photo-edit-item">
+          <img src="{{ current_user.avatar or 'https://i.pravatar.cc/80?u='~current_user.id }}" class="edit-avatar-preview" id="avatarPreview" alt="avatar">
+          <label class="btn btn-ghost btn-sm" style="margin-top:8px;cursor:pointer">
+            Changer l'avatar
+            <input type="file" name="avatar" accept="image/*" style="display:none" onchange="previewFile(this,'avatarPreview')">
+          </label>
+        </div>
+        <div class="photo-edit-item" style="flex:1">
+          <div class="edit-cover-preview" id="coverPreview" style="{% if current_user.cover %}background-image:url('{{ current_user.cover }}'){% endif %}">
+            <span>Photo de couverture</span>
+          </div>
+          <label class="btn btn-ghost btn-sm" style="margin-top:8px;cursor:pointer">
+            Changer la couverture
+            <input type="file" name="cover" accept="image/*" style="display:none" onchange="previewCover(this)">
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info -->
+    <div class="card edit-section">
+      <h3>ℹ️ Informations</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nom d'utilisateur</label>
+          <input type="text" name="username" value="{{ current_user.username }}" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label>Email (non modifiable)</label>
+          <input type="email" value="{{ current_user.email }}" class="form-input" disabled>
+        </div>
+        <div class="form-group full-width">
+          <label>Bio</label>
+          <textarea name="bio" rows="3" class="form-input" placeholder="Parlez de vous..." maxlength="500">{{ current_user.bio }}</textarea>
+          <small class="form-hint">Max 500 caractères</small>
+        </div>
+        <div class="form-group">
+          <label>Localisation</label>
+          <input type="text" name="location" value="{{ current_user.location }}" class="form-input" placeholder="ex: Antananarivo">
+        </div>
+        <div class="form-group">
+          <label>Site web</label>
+          <input type="url" name="website" value="{{ current_user.website }}" class="form-input" placeholder="https://votre-site.mg">
+        </div>
+      </div>
+    </div>
+
+    <!-- Password change -->
+    <div class="card edit-section">
+      <h3>🔒 Changer le mot de passe</h3>
+      <p class="form-hint" style="margin-bottom:14px">Laissez vide pour ne pas changer.</p>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Mot de passe actuel</label>
+          <div class="input-pass-wrap">
+            <input type="password" name="old_password" id="oldPass" placeholder="••••••••" class="form-input">
+            <button type="button" class="pass-eye" onclick="togglePass('oldPass',this)">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Nouveau mot de passe</label>
+          <div class="input-pass-wrap">
+            <input type="password" name="new_password" id="newPass" placeholder="Min. 6 caractères" class="form-input">
+            <button type="button" class="pass-eye" onclick="togglePass('newPass',this)">👁</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <a href="{{ url_for('profile', user_id=current_user.id) }}" class="btn btn-ghost">Annuler</a>
+      <button type="submit" class="btn btn-primary">💾 Sauvegarder</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

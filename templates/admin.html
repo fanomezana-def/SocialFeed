@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard — SocialFeed{% endblock %}
+{% block content %}
+<div class="admin-page">
+  <div class="page-header">
+    <h2>⚡ Tableau de bord Admin</h2>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card card">
+      <div class="kpi-icon">👥</div>
+      <div class="kpi-val">{{ total_users }}</div>
+      <div class="kpi-label">Utilisateurs</div>
+    </div>
+    <div class="kpi-card card">
+      <div class="kpi-icon">📝</div>
+      <div class="kpi-val">{{ total_posts }}</div>
+      <div class="kpi-label">Publications</div>
+    </div>
+    <div class="kpi-card card">
+      <div class="kpi-icon">📦</div>
+      <div class="kpi-val">{{ total_orders }}</div>
+      <div class="kpi-label">Commandes</div>
+    </div>
+    <div class="kpi-card card">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-val">{{ total_revenue | ariary }}</div>
+      <div class="kpi-label">Chiffre d'affaires</div>
+    </div>
+  </div>
+
+  <!-- Product Suggestions Stats -->
+  <div class="card admin-section">
+    <h3>🎯 Performance des suggestions produits</h3>
+    <p class="section-desc">Suivi des clics par produit et par source de suggestion.</p>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Produit</th>
+            <th>Prix</th>
+            <th>Clics total</th>
+            <th>Utilisateurs uniques</th>
+            <th>Feed</th>
+            <th>Sidebar</th>
+            <th>Bannière</th>
+            <th>Boutique</th>
+            <th>Dans paniers</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in prod_stats %}
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px">
+                <img src="{{ s.product.image_url }}" style="width:36px;height:36px;border-radius:6px;object-fit:cover" onerror="this.src='https://via.placeholder.com/36'">
+                <div>
+                  <div style="font-weight:600">{{ s.product.name }}</div>
+                  <div style="font-size:.75rem;color:var(--text3)">{{ s.product.category }}</div>
+                </div>
+              </div>
+            </td>
+            <td>{{ s.product.price | ariary }}</td>
+            <td>
+              <span class="clicks-badge {% if s.total_clicks > 10 %}high{% elif s.total_clicks > 5 %}medium{% else %}low{% endif %}">
+                {{ s.total_clicks }}
+              </span>
+            </td>
+            <td>{{ s.unique_users }}</td>
+            <td>{{ s.by_source.get('feed', 0) }}</td>
+            <td>{{ s.by_source.get('sidebar', 0) }}</td>
+            <td>{{ s.by_source.get('banner', 0) }}</td>
+            <td>{{ s.by_source.get('boutique', 0) }}</td>
+            <td>{{ s.in_carts }}</td>
+            <td>
+              <form method="POST" action="{{ url_for('admin_delete_product', pid=s.product.id) }}" onsubmit="return confirm('Supprimer ce produit ?')">
+                <button class="btn btn-xs" style="background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)">Supprimer</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Recent Clicks Timeline -->
+  <div class="card admin-section">
+    <h3>📊 Derniers clics sur les suggestions</h3>
+    <div class="clicks-timeline">
+      {% for click in recent_clicks %}
+      <div class="click-item">
+        <div class="click-dot source-{{ click.source }}"></div>
+        <div class="click-info">
+          <span class="click-product">{{ click.product.name }}</span>
+          <span class="click-source source-tag-{{ click.source }}">{{ click.source }}</span>
+          <span class="click-date">{{ click.clicked_at.strftime('%d/%m %H:%M') }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Add Product -->
+  <div class="card admin-section">
+    <h3>➕ Ajouter un produit</h3>
+    <form method="POST" action="{{ url_for('admin_new_product') }}" class="admin-form">
+      <div class="form-grid">
+        <div class="form-group"><label>Nom *</label><input type="text" name="name" required class="form-input" placeholder="Nom du produit"></div>
+        <div class="form-group"><label>Catégorie *</label><input type="text" name="category" required class="form-input" placeholder="ex: Audio"></div>
+        <div class="form-group"><label>Prix (Ar) *</label><input type="number" name="price" required class="form-input" placeholder="ex: 150000"></div>
+        <div class="form-group"><label>Stock</label><input type="number" name="stock" value="100" class="form-input"></div>
+        <div class="form-group"><label>Badge</label><input type="text" name="badge" class="form-input" placeholder="ex: Nouveau, Promo"></div>
+        <div class="form-group"><label>URL Image</label><input type="url" name="image_url" class="form-input" placeholder="https://..."></div>
+        <div class="form-group full-width"><label>Description</label><textarea name="description" rows="2" class="form-input" placeholder="Description du produit..."></textarea></div>
+      </div>
+      <button type="submit" class="btn btn-primary">Ajouter le produit</button>
+    </form>
+  </div>
+
+  <!-- Users -->
+  <div class="card admin-section">
+    <h3>👥 Gestion des utilisateurs</h3>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>Utilisateur</th><th>Email</th><th>Inscrit le</th><th>Rôle</th><th>Action</th></tr></thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px">
+                <img src="{{ u.avatar or 'https://i.pravatar.cc/32?u='~u.id }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover">
+                {{ u.username }}
+              </div>
+            </td>
+            <td style="color:var(--text2)">{{ u.email }}</td>
+            <td style="color:var(--text3)">{{ u.created_at.strftime('%d/%m/%Y') }}</td>
+            <td>
+              {% if u.is_admin %}<span class="role-badge admin">Admin</span>
+              {% else %}<span class="role-badge user">Utilisateur</span>{% endif %}
+            </td>
+            <td>
+              {% if u.id != current_user.id %}
+              <form method="POST" action="{{ url_for('toggle_admin', uid=u.id) }}">
+                <button class="btn btn-xs {% if u.is_admin %}btn-warning{% else %}btn-outline{% endif %}">
+                  {% if u.is_admin %}Retirer Admin{% else %}Passer Admin{% endif %}
+                </button>
+              </form>
+              {% else %}—{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Orders -->
+  <div class="card admin-section">
+    <h3>📦 Dernières commandes</h3>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>#</th><th>Utilisateur</th><th>Articles</th><th>Total</th><th>Date</th><th>Statut</th></tr></thead>
+        <tbody>
+          {% for order in all_orders %}
+          <tr>
+            <td>#{{ order.id }}</td>
+            <td>{{ order.user.username }}</td>
+            <td>
+              {% for item in order.items_parsed %}
+              <div style="font-size:.8rem">{{ item.name }} ×{{ item.qty }}</div>
+              {% endfor %}
+            </td>
+            <td><strong>{{ order.total | ariary }}</strong></td>
+            <td style="color:var(--text3)">{{ order.created_at.strftime('%d/%m/%Y') }}</td>
+            <td><span class="order-status status-en_attente">{{ order.status }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

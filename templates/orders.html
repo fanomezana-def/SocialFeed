@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Mes commandes — SocialFeed{% endblock %}
+{% block content %}
+<div class="orders-page">
+  <div class="page-header"><h2>📦 Mes commandes</h2></div>
+  {% for order in orders %}
+  <div class="card order-card">
+    <div class="order-header">
+      <div>
+        <span class="order-id">Commande #{{ order.id }}</span>
+        <span class="order-date">{{ order.created_at.strftime('%d/%m/%Y à %H:%M') }}</span>
+      </div>
+      <span class="order-status status-{{ order.status.replace(' ','_') }}">{{ order.status }}</span>
+    </div>
+    <div class="order-items">
+      {% for item in order.items_parsed %}
+      <div class="order-item-row">
+        <span>{{ item.name }} × {{ item.qty }}</span>
+        <span>{{ (item.price * item.qty) | ariary }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="order-total">Total : <strong>{{ order.total | ariary }}</strong></div>
+  </div>
+  {% else %}
+  <div class="card empty-card"><div class="empty-icon">📦</div><p>Aucune commande.</p><a href="{{ url_for('products') }}" class="btn btn-primary" style="margin-top:12px">Découvrir la boutique</a></div>
+  {% endfor %}
+</div>
+{% endblock %}
